@@ -1,0 +1,265 @@
+import React, { useState, useEffect } from "react";
+import { IoChatbubbleEllipsesOutline, IoVideocamOutline, IoMicOutline   } from "react-icons/io5";
+import { IoIosCall, IoMdMore, IoIosArrowBack, IoIosMore    } from "react-icons/io";
+import { GrEmoji } from "react-icons/gr";
+import { PiTelegramLogo } from "react-icons/pi";
+import "./styles.css";
+import "./tailwindcss-colors.css";
+
+export default function ChatApp() {
+  const [isProfileActive, setIsProfileActive] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [activeConversation, setActiveConversation] = useState("default");
+
+  const handleProfileToggle = (e) => {
+    e.preventDefault();
+    setIsProfileActive(!isProfileActive);
+  };
+
+  const handleClickOutside = (e) => {
+    if (!e.target.closest('.chat-sidebar-profile')) {
+      setIsProfileActive(false);
+    }
+  };
+
+  const handleDropdownToggle = (e, id) => {
+    e.preventDefault();
+    setActiveDropdown(activeDropdown === id ? null : id);
+  };
+
+  const handleClickOutsideDropdown = (e) => {
+    if (!e.target.closest('.conversation-item-dropdown')) {
+      setActiveDropdown(null);
+    }
+  };
+
+  const handleConversationClick = (e, conversationId) => {
+    e.preventDefault();
+    setActiveConversation(conversationId);
+  };
+
+  const handleBackClick = (e) => {
+    e.preventDefault();
+    setActiveConversation("default");
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('click', handleClickOutsideDropdown);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('click', handleClickOutsideDropdown);
+    };
+  }, []);
+
+  const users = Array.from({ length: 20 }, (_, i) => ({
+    id: `user-${i + 1}`,
+    name: `User ${i + 1}`,
+    profilePic: `https://i.pravatar.cc/150?img=${i + 1}`,
+    lastMessage: `This is a message from User ${i + 1}`,
+    lastMessageTime: `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 59) + 1}`,
+  }));
+  
+  // Sample Messages Data
+  const messages = users.reduce((acc, user) => {
+    acc[user.id] = [
+      { id: 1, text: "Hey, how are you?", time: "10:30 AM", sender: "them" },
+      { id: 2, text: "I'm doing great! How about you?", time: "10:31 AM", sender: "me" },
+      { id: 3, text: "Just chilling, working on a project.", time: "10:32 AM", sender: "them" },
+      { id: 4, text: "Sounds cool! Need any help?", time: "10:33 AM", sender: "me" },
+    ];
+    return acc;
+  }, {});
+
+  return (
+    <section className="chat-section">
+      <div className="chat-container">
+        <aside className="chat-sidebar">
+          <a href="#" className="chat-sidebar-logo">
+            <i className="ri-chat-1-fill"></i>
+          </a>
+          <ul className="chat-sidebar-menu">
+            <li className="active"><a href="#" data-title="Chats"><IoChatbubbleEllipsesOutline /></a></li>
+            <li className={`chat-sidebar-profile ${isProfileActive ? 'active' : ''}`}>
+              <button type="button" className="chat-sidebar-profile-toggle" onClick={handleProfileToggle}>
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+              </button>
+              <ul className="chat-sidebar-profile-dropdown">
+                <li><a href="#"><i className="ri-user-line"></i> Profile</a></li>
+                <li><a href="#"><i className="ri-logout-box-line"></i> Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+        </aside>
+        <div className="chat-content">
+          <div className="content-sidebar">
+            <div className="content-sidebar-title">Chats</div>
+            <form action="" className="content-sidebar-form">
+              <input type="search" className="content-sidebar-input" placeholder="Search..." />
+              <button type="submit" className="content-sidebar-submit"><i className="ri-search-line"></i></button>
+            </form>
+            <div className="content-messages">
+              <ul className="content-messages-list">
+
+                {users.map((elem,idx)=>{
+                  return <li key={elem.id}>
+                  <a href="#" data-conversation= {`#${elem.id}`} onClick={(e) => handleConversationClick(e, elem.id)}>
+                    <img className="content-message-image" src={elem.profilePic} alt="" />
+                    <span className="content-message-info">
+                      <span className="content-message-name">Someone</span>
+                      <span className="content-message-text">Lorem ipsum dolor sit amet consectetur.</span>
+                    </span>
+                    <span className="content-message-more">
+                      <span className="content-message-time">12:30</span>
+                    </span>
+                  </a>
+                </li>
+                })}
+                
+                {/* <li>
+                  <a href="#" data-conversation="#conversation-1" onClick={(e) => handleConversationClick(e, "conversation-1")}>
+                    <img className="content-message-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                    <span className="content-message-info">
+                      <span className="content-message-name">Someone</span>
+                      <span className="content-message-text">Lorem ipsum dolor sit amet consectetur.</span>
+                    </span>
+                    <span className="content-message-more">
+                      <span className="content-message-time">12:30</span>
+                    </span>
+                  </a>
+                </li> */}
+
+              </ul>
+            </div>
+          </div>
+          <div className={`conversation conversation-default ${activeConversation === "default" ? 'active' : ''}`}>
+            <i className="ri-chat-3-line"></i>
+            <p>Select chat and view conversation!</p>
+          </div>
+          <div className={`conversation ${activeConversation !== "default" ? 'active' : ''}`} id="conversation-1">
+            <div className="conversation-top">
+              <button type="button" className="conversation-back" onClick={handleBackClick}><IoIosArrowBack /></button>
+              <div className="conversation-user">
+                <img className="conversation-user-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                <div>
+                  <div className="conversation-user-name">Someone</div>
+                  <div className="conversation-user-status online">online</div>
+                </div>
+              </div>
+              <div className="conversation-buttons">
+                <button type="button"><IoIosCall/></button>
+                <button type="button"><IoVideocamOutline/></button>
+                <button type="button"><IoMdMore/></button>
+              </div>
+            </div>
+            <div className="conversation-main">
+              <ul className="conversation-wrapper">
+
+                <li className="conversation-item">
+                  <div className="conversation-item-side">
+                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                  </div>
+                  <div className="conversation-item-content">
+                    <div className="conversation-item-wrapper">
+                      <div className="conversation-item-box">
+                        <div className="conversation-item-text">
+                          <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Amet natus repudiandae quisquam sequi nobis suscipit consequatur rerum alias odio repellat!</p>
+                          <div className="conversation-item-time">12:30</div>
+                        </div>
+                        <div className={`conversation-item-dropdown ${activeDropdown === '1' ? 'active' : ''}`}>
+                          <button type="button" className="conversation-item-dropdown-toggle" onClick={(e) => handleDropdownToggle(e, '1')}><IoIosMore /></button>
+                          <ul className="conversation-item-dropdown-list">
+                            <li><a href="#"><i className="ri-share-forward-line"></i> Forward</a></li>
+                            <li><a href="#"><i className="ri-delete-bin-line"></i> Delete</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li className="conversation-item me">
+                  <div className="conversation-item-side">
+                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                  </div>
+                  <div className="conversation-item-content">
+                    <div className="conversation-item-wrapper">
+                      <div className="conversation-item-box">
+                        <div className="conversation-item-text">
+                          <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit.</p>
+                          <div className="conversation-item-time">12:30</div>
+                        </div>
+                        <div className="conversation-item-dropdown">
+                          <button type="button" className="conversation-item-dropdown-toggle"><IoIosMore /></button>
+                          <ul className="conversation-item-dropdown-list">
+                            <li><a href="#"><i className="ri-share-forward-line"></i> Forward</a></li>
+                            <li><a href="#"><i className="ri-delete-bin-line"></i> Delete</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+
+                <li className="conversation-item">
+                  <div className="conversation-item-side">
+                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                  </div>
+                  <div className="conversation-item-content">
+                    <div className="conversation-item-wrapper">
+                      <div className="conversation-item-box">
+                        <div className="conversation-item-text">
+                          <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Amet natus repudiandae quisquam sequi nobis suscipit consequatur rerum alias odio repellat!</p>
+                          <div className="conversation-item-time">12:30</div>
+                        </div>
+                        <div className={`conversation-item-dropdown ${activeDropdown === '1' ? 'active' : ''}`}>
+                          <button type="button" className="conversation-item-dropdown-toggle" onClick={(e) => handleDropdownToggle(e, '1')}><IoIosMore /></button>
+                          <ul className="conversation-item-dropdown-list">
+                            <li><a href="#"><i className="ri-share-forward-line"></i> Forward</a></li>
+                            <li><a href="#"><i className="ri-delete-bin-line"></i> Delete</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li className="conversation-item me">
+                  <div className="conversation-item-side">
+                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                  </div>
+                  <div className="conversation-item-content">
+                    <div className="conversation-item-wrapper">
+                      <div className="conversation-item-box">
+                        <div className="conversation-item-text">
+                          <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit.</p>
+                          <div className="conversation-item-time">12:30</div>
+                        </div>
+                        <div className="conversation-item-dropdown">
+                          <button type="button" className="conversation-item-dropdown-toggle"><IoIosMore /></button>
+                          <ul className="conversation-item-dropdown-list">
+                            <li><a href="#"><i className="ri-share-forward-line"></i> Forward</a></li>
+                            <li><a href="#"><i className="ri-delete-bin-line"></i> Delete</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+
+              </ul>
+            </div>
+            <div className="conversation-form">
+              <button type="button" className="conversation-form-button"><GrEmoji/></button>
+              <div className="conversation-form-group">
+                <textarea className="conversation-form-input" rows="1" placeholder="Type here..."></textarea>
+                <button type="button" className="conversation-form-record"><IoMicOutline /></button>
+              </div>
+              <button type="button" className="conversation-form-button conversation-form-submit"><PiTelegramLogo/></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
