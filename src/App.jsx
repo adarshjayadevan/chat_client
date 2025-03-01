@@ -4,6 +4,7 @@ import ChatApp from './Chat/Chat'
 import { Login } from './Auth/Login'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Auth from './Auth/Auth';
+import { Register } from './Auth/Register';
 
 function App() {
 
@@ -16,6 +17,11 @@ function App() {
             path='/login'
             element={
               <Login />
+            } />
+          <Route
+            path='/register'
+            element={
+              <Register />
             } />
           <Route
             path='/'

@@ -3,19 +3,22 @@ import './Login.css';
 import LOGIN_IMG from '../assets/login.JPG';
 import { CiUser } from "react-icons/ci";
 import { RiLockPasswordLine } from "react-icons/ri";
+import { FaMobileRetro } from "react-icons/fa6";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-export const Login = () => {
+export const Register = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
     const [user, setUser] = useState({
         name: '',
-        password: ''
+        password: '',
+        mobile:''
     })
     const [error, setError] = useState({
         name: '',
-        password: ''
+        password: '',
+        mobile:''
     })
     const [apiError, setApiError] = useState('')
 
@@ -38,15 +41,19 @@ export const Login = () => {
                 password: `Enter Password`
             })
         }
-        if (error.name || error.password) {
+        if (!user.mobile) {
+            setError({
+                ...error,
+                mobile: `Enter Mobile Number`
+            })
+        }
+        if (error.name || error.password || error.mobile) {
             return
         }
-        axios.post(`${import.meta.env.VITE_API_URL}/login`, user).then(res => {
+        axios.post(`${import.meta.env.VITE_API_URL}/register`, user).then(res => {
             console.log(res)
             if(res?.data?.status){
-                debugger
-                localStorage.setItem('token',res?.data?.token)
-                navigate('/')
+                navigate('/login')
             }
         }).catch(err => {
             console.log(err);
@@ -63,7 +70,7 @@ export const Login = () => {
 
                 <div className="login__forms">
                     <form action="" className="login__registre" id="login-in">
-                        <h1 className="login__title">Login</h1>
+                        <h1 className="login__title">Create Account</h1>
 
                         <div className="login__box">
                             <CiUser />
@@ -73,7 +80,14 @@ export const Login = () => {
                             })} placeholder="Username" className="login__input" />
                         </div>
                         {error.name && <p className='error_message'>{error.name}</p>}
-
+                        <div className="login__box">
+                            <FaMobileRetro />
+                            <input type="text" value={user.mobile} onChange={(e) => setUser({
+                                ...user,
+                                mobile: e.target.value
+                            })} placeholder="Mobile Number" className="login__input" />
+                        </div>
+                        {error.password && <p className='error_message'>{error.password}</p>}    
                         <div className="login__box">
                             <RiLockPasswordLine />
                             <input type="password" value={user.password} onChange={(e) => setUser({
@@ -84,13 +98,11 @@ export const Login = () => {
                         {error.password && <p className='error_message'>{error.password}</p>}
                         {apiError && <p className='error_message'>{apiError}</p>}
 
-                        {/* <a href="#" className="login__forgot">Forgot password?</a> */}
-
-                        <a onClick={() => handleSubmit()} className="login__button">Sign In</a>
+                        <a onClick={() => handleSubmit()} className="login__button">Register</a>
 
                         <div>
-                            <span className="login__account">Don't have an Account ?</span>
-                            <span className="login__signin" onClick={()=>navigate('/register')} id="sign-up">Sign Up</span>
+                            <span className="login__account">Already have an account ?</span>
+                            <span className="login__signin" onClick={()=>navigate('/login')} id="sign-up">Login</span>
                         </div>
                     </form>
 
