@@ -4,7 +4,7 @@ import { IoIosLogOut } from "react-icons/io";
 import { HiUserAdd } from "react-icons/hi";
 import { MdGroupAdd } from "react-icons/md";
 import { CiUser } from "react-icons/ci";
-import { Modal, List, HStack, Text, Avatar, Button, Placeholder } from 'rsuite';
+import { Modal, List, HStack, Text, Avatar, Form, Button, CheckPicker, Stack, Input, Image } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
 import "./styles.css";
 import "./color-palette.css";
@@ -28,10 +28,24 @@ export default function ChatApp() {
   const [isGroup, setIsGroup] = useState(false);
   const [userMessages, setUserMessages] = useState([]);
   const [newChatModal, setNewChatModal] = useState(false);
+  const [displayImage, setDisplayImage] = useState(localStorage.getItem('profileImage') || AvatarImg)
+
+  const [newGroupModal, setNewGroupModal] = useState(false);
+  const [newGroupAdded, setNewGroupAdded] = useState(null);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupId, setNewGroupId] = useState('');
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
+
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('chat');
   const [refreshFlag, setRefreshFlag] = useState(false);
   const [groupMessagesData, setGroupMessagesData] = useState({});
+
+  const [userProfileModal, setUserProfileModal] = useState(false);
+  const [imgFile, setImgFile] = useState(null);
+  const [image, setImage] = useState(localStorage.getItem('profileImage'));
+  const [imgErr, setImgErr] = useState('');
+  const [imageErr, setImageErr] = useState(false);
 
   const handleProfileToggle = (e) => {
     e.preventDefault();
@@ -87,7 +101,7 @@ export default function ChatApp() {
 
   useEffect(() => {
     getContacts()
-  }, [userMessages])
+  }, [refreshFlag])
 
   async function getContacts() {
     const token = localStorage.getItem('token');
@@ -158,6 +172,7 @@ export default function ChatApp() {
     const userId = jwtDecode(token).id
     axios.post(`${import.meta.env.VITE_API_URL}/contacts`, { userId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
+      debugger
       if (res?.data?.data) {
         setUsers(res?.data?.data)
       }
@@ -197,8 +212,104 @@ export default function ChatApp() {
     })
   }
 
+  async function createGroup() {
+    const token = localStorage.getItem('token');
+    const userId = jwtDecode(token).id
+    axios.post(`${import.meta.env.VITE_API_URL}/group`, { name: newGroupName }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
+      debugger
+      setNewGroupId(res?.data?.groupId)
+      setNewGroupAdded(true);
+      axios.post(`${import.meta.env.VITE_API_URL}/contacts`, { userId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
+        console.log(res);
+        debugger
+        if (res?.data?.data) {
+          setUsers(res?.data?.data)
+        }
+      }).catch(err => {
+        console.log(err);
+        if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
+          localStorage.removeItem('token');
+          navigate('/')
+        }
+        if (err.status == 401 && err.response?.data?.message == "Authorization failed due to jwt expired") {
+          localStorage.removeItem('token');
+          navigate('/')
+        }
+        debugger
+      })
+    }).catch(err => {
+      console.log(err);
+      if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+      if (err.status == 401 && err.response?.data?.message == "Authorization failed due to jwt expired") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+      debugger
+    })
+  }
+
+  async function addGroupMembers() {
+    const token = localStorage.getItem('token');
+    axios.post(`${import.meta.env.VITE_API_URL}/members`, { groupId: newGroupId, members: selectedGroupMembers }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
+      // if (res?.data?.data) {
+      //   handleConversationClick(e, res?.data?.data?._id?.toString(), user.name, res?.data?.data?.chatId)
+      // }
+      setRefreshFlag(prev => !prev)
+      setNewGroupModal(false)
+    }).catch(err => {
+      console.log(err);
+      if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+      if (err.status == 401 && err.response?.data?.message == "Authorization failed due to jwt expired") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+      debugger
+    })
+  }
+
+  function handleNewGroupClose() {
+    setNewGroupModal(false)
+    setRefreshFlag(prev => !prev)
+  }
+
+  async function getUserProfile() {
+    setUserProfileModal(true)
+  }
+
+  async function updateProfile(){
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('image',imgFile);
+    axios.put(`${import.meta.env.VITE_API_URL}/profile`, formData, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
+      if (res?.data?.image) {
+        localStorage.setItem('profileImage',res?.data?.image);
+        setDisplayImage(res?.data?.image);
+        setUserProfileModal(false)
+        setRefreshFlag(prev=>!prev)
+      }
+    }).catch(err => {
+      console.log(err);
+      if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+      if (err.status == 401 && err.response?.data?.message == "Authorization failed due to jwt expired") {
+        localStorage.removeItem('token');
+        navigate('/')
+      }
+    })
+  }
+
+
   function logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('profileImage');
     navigate('/login')
   }
 
@@ -212,13 +323,13 @@ export default function ChatApp() {
           <ul className="chat-sidebar-menu">
             <li className={activeTab == 'chat' ? 'active' : ''}><a href="#" onClick={() => setActiveTab('chat')} data-title="Chats"><IoChatbubbleEllipsesOutline /></a></li>
             <li className={activeTab == 'contacts' ? 'active' : ''}><a href="#" onClick={() => { setActiveTab('contacts'); getAllUsers() }} data-title="New Chat"><HiUserAdd /></a></li>
-            <li className={activeTab == 'group' ? 'active' : ''}><a href="#" onClick={() => setActiveTab('group')} data-title="New Group"><MdGroupAdd /></a></li>
+            <li className={activeTab == 'group' ? 'active' : ''}><a href="#" onClick={() => { setActiveTab('group'); setNewGroupModal(true) }} data-title="New Group"><MdGroupAdd /></a></li>
             <li className={`chat-sidebar-profile ${isProfileActive ? 'active' : ''}`}>
               <button type="button" className="chat-sidebar-profile-toggle" onClick={handleProfileToggle}>
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                <img src={displayImage} alt="" />
               </button>
               <ul className="chat-sidebar-profile-dropdown">
-                <li><a href="#"><CiUser /> Profile</a></li>
+                <li><a onClick={() => getUserProfile()} href="#"><CiUser /> Profile</a></li>
                 <li><a onClick={() => logout()} href="#"><IoIosLogOut /> Logout</a></li>
               </ul>
             </li>
@@ -226,7 +337,7 @@ export default function ChatApp() {
         </aside>
         <div className="chat-content">
           <div className="content-sidebar">
-            <div className="content-sidebar-title">Chats</div>
+            <div className="content-sidebar-title">Messenger</div>
             <form action="" className="content-sidebar-form">
               <input type="search" className="content-sidebar-input" placeholder="Search..." />
               <button type="submit" className="content-sidebar-submit"><i className="ri-search-line"></i></button>
@@ -237,13 +348,13 @@ export default function ChatApp() {
                 {contacts.map((elem, idx) => {
                   return <li key={elem._id}>
                     <a href="#" data-conversation={`#${elem._id}`} onClick={(e) => {
-                      if(elem.hasOwnProperty('members')){
+                      if (elem.hasOwnProperty('members')) {
                         handleConversationClick(e, elem._id.toString(), elem.receiver, elem._id, elem.name)
-                      }else{
+                      } else {
                         handleConversationClick(e, elem._id.toString(), elem.receiver, elem.chatId, elem.name)
                       }
                     }}>
-                      <img className="content-message-image" src={AvatarImg} alt="" />
+                      <img className="content-message-image" src={elem.profileImage || AvatarImg} alt="" />
                       <span className="content-message-info">
                         <span className="content-message-name">{elem.receiver || elem.name}</span>
                         <span className="content-message-text">{elem.messages?.text || ''}</span>
@@ -291,7 +402,7 @@ export default function ChatApp() {
                 setNewChatModal(false)
               }} key={user._id}>
                 <HStack spacing={15} alignItems="center">
-                  <Avatar src={`https://i.pravatar.cc/150?u=${idx + 1}`} alt={user.name} circle />
+                  <Avatar src={user.profileImage || `https://i.pravatar.cc/150?u=${idx + 1}`} alt={user.name} circle />
                   <HStack.Item flex={1}>
                     <HStack justifyContent="space-between">
                       <Text strong>{user.name}</Text>
@@ -301,6 +412,75 @@ export default function ChatApp() {
               </List.Item>
             ))}
           </List>
+        </Modal.Body>
+      </Modal>
+      <Modal size={'sm'} open={newGroupModal} onClose={() => handleNewGroupClose()}>
+        <Modal.Header>
+          <Modal.Title>{newGroupAdded ? newGroupName : 'Create Group'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {!newGroupAdded ? (
+            <Form layout="inline">
+              <Stack spacing={10} alignItems="center">
+                <Form.Group controlId="username-8">
+                  <Form.ControlLabel>Group Name</Form.ControlLabel>
+                  <Input
+                    onChange={(value) => setNewGroupName(value)}
+                    placeholder="Group Name"
+                    style={{ width: 180 }} // Adjust width for aesthetics
+                  />
+                </Form.Group>
+                <Button appearance="primary" onClick={() => createGroup()}>Create</Button>
+              </Stack>
+            </Form>
+          ) : (
+            <Stack spacing={10} alignItems="center">
+              <Form.Group controlId="username-8">
+                <Form.ControlLabel>Add Members</Form.ControlLabel>
+                <CheckPicker
+                  data={users.map(item => ({ label: item.name, value: item._id }))}
+                  style={{ width: 224 }}
+                  onChange={(e) => setSelectedGroupMembers(e)}
+                />
+              </Form.Group>
+              <Button
+                appearance="primary"
+                disabled={selectedGroupMembers.length === 0}
+                onClick={() => addGroupMembers()}
+              >
+                Add
+              </Button>
+            </Stack>
+          )}
+        </Modal.Body>
+
+      </Modal>
+      <Modal size={'xs'} open={userProfileModal} onClose={() => setUserProfileModal(false)}>
+        <Modal.Header>
+          <Modal.Title>{'Update Profile'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Image
+              circle
+              src={image}
+              alt="brown french bulldog puppy lying on yellow textile"
+              width={160}
+            />
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginLeft:'10%', marginTop: "10px" }}>
+            <input type="file" onChange={(e)=>{
+              if(e.target.files[0]?.type?.includes('image')){
+                setImgFile(e.target.files[0])
+                setImage((URL.createObjectURL(e.target.files[0])))
+              }else{
+                setImgErr(`Select an image file!`)
+                setImageErr(true);
+              }
+            }}/>
+          </div>
+            {imageErr&&<p style={{ color:'red', display: "block", margin: " auto" }}>{imgErr}</p>}
+          <Button onClick={()=>updateProfile()} style={{ display: "block", margin: "10px auto" }}>Update</Button>
         </Modal.Body>
       </Modal>
     </section>

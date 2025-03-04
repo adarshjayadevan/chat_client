@@ -5,6 +5,7 @@ import { CiUser } from "react-icons/ci";
 import { RiLockPasswordLine } from "react-icons/ri";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -46,6 +47,7 @@ export const Login = () => {
             if(res?.data?.status){
                 debugger
                 localStorage.setItem('token',res?.data?.token)
+                localStorage.setItem('profileImage',res?.data?.profileImage)
                 navigate('/')
             }
         }).catch(err => {

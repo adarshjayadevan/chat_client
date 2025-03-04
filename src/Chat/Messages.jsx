@@ -14,7 +14,7 @@ export default function Messages({ activeConversation, messages, conversationUse
   const endRef = useRef(null);
   const navigate = useNavigate()
   const token = localStorage.getItem('token');
-  const userId = jwtDecode(token).id
+  const userId = token?jwtDecode(token).id:''
   const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
