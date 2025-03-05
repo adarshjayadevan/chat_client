@@ -10,7 +10,7 @@ import moment from "moment";
 import useWebSocket from "react-use-websocket";
 import { useNavigate } from "react-router-dom";
 
-export default function Messages({ activeConversation, messages, conversationUser, handleBackClick, chatId, setMessages, isGroup, groupMessagesData, setGroupMessagesData }) {
+export default function Messages({ activeConversation, messages, conversationUser, handleBackClick, chatId, setMessages, isGroup, groupMessagesData, setGroupMessagesData, receiverImage }) {
   const endRef = useRef(null);
   const navigate = useNavigate()
   const token = localStorage.getItem('token');
@@ -67,7 +67,7 @@ export default function Messages({ activeConversation, messages, conversationUse
   };
 
   console.log(groupMessagesData)
-
+  console.log(JSON.stringify(messages))
 
 
   if (activeConversation === "default") return null;
@@ -136,7 +136,7 @@ export default function Messages({ activeConversation, messages, conversationUse
           <div className="conversation-top">
             <button type="button" className="conversation-back" onClick={handleBackClick}><IoIosArrowBack /></button>
             <div className="conversation-user">
-              <img className="conversation-user-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+              <img className="conversation-user-image" src={receiverImage||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} alt="" />
               <div>
                 <div className="conversation-user-name">{conversationUser}</div>
                 <div className="conversation-user-status online">online</div>
@@ -157,7 +157,7 @@ export default function Messages({ activeConversation, messages, conversationUse
                   ref={idx === messages.length - 1 ? endRef : null}
                 >
                   <div className="conversation-item-side">
-                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                    <img className="conversation-item-image" src={elem?.sender?.toString() == userId ?localStorage.getItem('profileImage'):receiverImage} alt="" />
                   </div>
                   <div className="conversation-item-content">
                     <div className="conversation-item-wrapper">

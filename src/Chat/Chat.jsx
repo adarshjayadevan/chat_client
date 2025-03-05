@@ -47,6 +47,8 @@ export default function ChatApp() {
   const [imgErr, setImgErr] = useState('');
   const [imageErr, setImageErr] = useState(false);
 
+  const [receiverImage, setReceiverImage] = useState('')
+
   const handleProfileToggle = (e) => {
     e.preventDefault();
     setIsProfileActive(!isProfileActive);
@@ -129,7 +131,9 @@ export default function ChatApp() {
     axios.post(`${import.meta.env.VITE_API_URL}/messages`, { userId, chatId: conversationId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       if (res?.data?.data[0]) {
-        setUserMessages(res?.data?.data[0].messages)
+        debugger
+        setUserMessages(res?.data?.data[0].messages);
+        setReceiverImage(res?.data?.data[0].receiverImage)
       }
     }).catch(err => {
       console.log(err);
@@ -354,7 +358,7 @@ export default function ChatApp() {
                         handleConversationClick(e, elem._id.toString(), elem.receiver, elem.chatId, elem.name)
                       }
                     }}>
-                      <img className="content-message-image" src={elem.profileImage || AvatarImg} alt="" />
+                      <img className="content-message-image" src={elem.receiverImage || AvatarImg} alt="" />
                       <span className="content-message-info">
                         <span className="content-message-name">{elem.receiver || elem.name}</span>
                         <span className="content-message-text">{elem.messages?.text || ''}</span>
@@ -383,6 +387,7 @@ export default function ChatApp() {
             isGroup={isGroup}
             groupMessagesData={groupMessagesData}
             setGroupMessagesData={setGroupMessagesData}
+            receiverImage={receiverImage}
           />
         </div>
       </div>
