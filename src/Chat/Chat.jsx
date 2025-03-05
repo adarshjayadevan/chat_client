@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
-import { IoIosLogOut } from "react-icons/io";
+import { IoIosLogOut,IoIosSearch  } from "react-icons/io";
 import { HiUserAdd } from "react-icons/hi";
 import { MdGroupAdd } from "react-icons/md";
 import { CiUser } from "react-icons/ci";
@@ -46,6 +46,8 @@ export default function ChatApp() {
   const [image, setImage] = useState(localStorage.getItem('profileImage'));
   const [imgErr, setImgErr] = useState('');
   const [imageErr, setImageErr] = useState(false);
+
+  const [ search, setSearch] = useState('')
 
   const [receiverImage, setReceiverImage] = useState('')
 
@@ -103,12 +105,12 @@ export default function ChatApp() {
 
   useEffect(() => {
     getContacts()
-  }, [refreshFlag])
+  }, [refreshFlag, search])
 
   async function getContacts() {
     const token = localStorage.getItem('token');
     const userId = jwtDecode(token).id
-    axios.post(`${import.meta.env.VITE_API_URL}/chats`, { userId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
+    axios.post(`${import.meta.env.VITE_API_URL}/chats`, { userId, search }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       setContacts(res?.data?.data);
     }).catch(err => {
@@ -342,10 +344,10 @@ export default function ChatApp() {
         <div className="chat-content">
           <div className="content-sidebar">
             <div className="content-sidebar-title">Messenger</div>
-            <form action="" className="content-sidebar-form">
-              <input type="search" className="content-sidebar-input" placeholder="Search..." />
-              <button type="submit" className="content-sidebar-submit"><i className="ri-search-line"></i></button>
-            </form>
+            <div className="content-sidebar-form">
+              <input type="search" onChange={(e)=>setSearch(e.target.value)} className="content-sidebar-input" placeholder="Search..." />
+              <button onClick={()=>getContacts()} className="content-sidebar-submit"><IoIosSearch /></button>
+            </div>
             <div className="content-messages">
               <ul className="content-messages-list">
 
@@ -358,7 +360,7 @@ export default function ChatApp() {
                         handleConversationClick(e, elem._id.toString(), elem.receiver, elem.chatId, elem.name)
                       }
                     }}>
-                      <img className="content-message-image" src={elem.receiverImage || AvatarImg} alt="" />
+                      <img className="content-message-image" src={elem.receiverImage || elem.groupImage || AvatarImg} alt="" />
                       <span className="content-message-info">
                         <span className="content-message-name">{elem.receiver || elem.name}</span>
                         <span className="content-message-text">{elem.messages?.text || ''}</span>
