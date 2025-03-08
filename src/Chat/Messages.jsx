@@ -9,8 +9,9 @@ import { jwtDecode } from "jwt-decode";
 import moment from "moment";
 import useWebSocket from "react-use-websocket";
 import { useNavigate } from "react-router-dom";
+import GroupIcon from '../assets/groupIcon.jpg'
 
-export default function Messages({ activeConversation, messages, conversationUser, handleBackClick, chatId, setMessages, isGroup, groupMessagesData, setGroupMessagesData, receiverImage }) {
+export default function Messages({ activeConversation, messages, conversationUser, handleBackClick, chatId, setMessages, isGroup, groupMessagesData, setGroupMessagesData, receiverImage, groupImage }) {
   const endRef = useRef(null);
   const navigate = useNavigate()
   const token = localStorage.getItem('token');
@@ -82,10 +83,9 @@ export default function Messages({ activeConversation, messages, conversationUse
           <div className="conversation-top">
             <button type="button" className="conversation-back" onClick={handleBackClick}><IoIosArrowBack /></button>
             <div className="conversation-user">
-              <img className="conversation-user-image" src="https://images.unsplash.com/photo-1530099486328-e021101a494a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzB8fGdyb3VwfGVufDB8fDB8fHww" alt="" />
+              <img className="conversation-user-image" src={groupImage||GroupIcon} alt="" />
               <div>
                 <div className="conversation-user-name">{conversationUser}</div>
-                <div className="conversation-user-status online">online</div>
               </div>
             </div>
             <div className="conversation-buttons">
@@ -100,10 +100,10 @@ export default function Messages({ activeConversation, messages, conversationUse
                 <li
                   key={elem._id}
                   className={`conversation-item ${elem?.sender?.toString() == userId ? "me" : ""}`}
-                  ref={idx === messages.length - 1 ? endRef : null}
+                  ref={idx === groupMessagesData?.messages.length - 1 ? endRef : null}
                 >
                   <div className="conversation-item-side">
-                    <img className="conversation-item-image" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="" />
+                    <img className="conversation-item-image" src={elem.sender==userId?localStorage.getItem('profileImage'):groupMessagesData?.members?.find(val=>val._id.toString()==elem.sender.toString()).profileImage} alt="" />
                     <p className="message-user-name">{elem.sender==userId?'you':groupMessagesData?.members?.find(val=>val._id.toString()==elem.sender.toString()).name}</p>
                   </div>
                   <div className="conversation-item-content">

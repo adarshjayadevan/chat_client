@@ -957,3 +957,7 @@ body {
 .user-contact :hover{
     background-color: #f0f0f0;
 }
+
+.message-user-name{
+    font-size: x-small;
+}

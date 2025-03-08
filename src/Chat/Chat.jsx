@@ -49,7 +49,8 @@ export default function ChatApp() {
 
   const [ search, setSearch] = useState('')
 
-  const [receiverImage, setReceiverImage] = useState('')
+  const [receiverImage, setReceiverImage] = useState('');
+  const [groupImage, setGroupImage] = useState('');
 
   const handleProfileToggle = (e) => {
     e.preventDefault();
@@ -157,6 +158,7 @@ export default function ChatApp() {
       console.log(res);
       if (res?.data?.data[0]) {
         debugger
+        setGroupImage(res?.data?.data[0].group?.groupImage)
         setGroupMessagesData(res?.data?.data[0]);
       }
     }).catch(err => {
@@ -390,6 +392,7 @@ export default function ChatApp() {
             groupMessagesData={groupMessagesData}
             setGroupMessagesData={setGroupMessagesData}
             receiverImage={receiverImage}
+            groupImage={groupImage}
           />
         </div>
       </div>
