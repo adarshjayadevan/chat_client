@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
-import { IoIosLogOut,IoIosSearch  } from "react-icons/io";
+import { IoIosLogOut, IoIosSearch } from "react-icons/io";
 import { HiUserAdd } from "react-icons/hi";
 import { MdGroupAdd } from "react-icons/md";
 import { CiUser } from "react-icons/ci";
@@ -47,7 +47,7 @@ export default function ChatApp() {
   const [imgErr, setImgErr] = useState('');
   const [imageErr, setImageErr] = useState(false);
 
-  const [ search, setSearch] = useState('')
+  const [search, setSearch] = useState('')
 
   const [receiverImage, setReceiverImage] = useState('');
   const [groupImage, setGroupImage] = useState('');
@@ -290,16 +290,16 @@ export default function ChatApp() {
     setUserProfileModal(true)
   }
 
-  async function updateProfile(){
+  async function updateProfile() {
     const token = localStorage.getItem('token');
     const formData = new FormData();
-    formData.append('image',imgFile);
+    formData.append('image', imgFile);
     axios.put(`${import.meta.env.VITE_API_URL}/profile`, formData, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       if (res?.data?.image) {
-        localStorage.setItem('profileImage',res?.data?.image);
+        localStorage.setItem('profileImage', res?.data?.image);
         setDisplayImage(res?.data?.image);
         setUserProfileModal(false)
-        setRefreshFlag(prev=>!prev)
+        setRefreshFlag(prev => !prev)
       }
     }).catch(err => {
       console.log(err);
@@ -347,8 +347,8 @@ export default function ChatApp() {
           <div className="content-sidebar">
             <div className="content-sidebar-title">Messenger</div>
             <div className="content-sidebar-form">
-              <input type="search" onChange={(e)=>setSearch(e.target.value)} className="content-sidebar-input" placeholder="Search..." />
-              <button onClick={()=>getContacts()} className="content-sidebar-submit"><IoIosSearch /></button>
+              <input type="search" onChange={(e) => setSearch(e.target.value)} className="content-sidebar-input" placeholder="Search..." />
+              <button onClick={() => getContacts()} className="content-sidebar-submit"><IoIosSearch /></button>
             </div>
             <div className="content-messages">
               <ul className="content-messages-list">
@@ -448,10 +448,25 @@ export default function ChatApp() {
               <Form.Group controlId="username-8">
                 <Form.ControlLabel>Add Members</Form.ControlLabel>
                 <CheckPicker
-                  data={users.map(item => ({ label: item.name, value: item._id }))}
+                  data={users.map(item => ({
+                    label: item.name,
+                    value: item._id,
+                    image: item.profileImage,
+                  }))}
                   style={{ width: 224 }}
                   onChange={(e) => setSelectedGroupMembers(e)}
+                  renderMenuItem={(label, item) => (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <img
+                        src={item.image}
+                        alt={label}
+                        style={{ width: 24, height: 24, borderRadius: '50%', marginRight: 10 }}
+                      />
+                      {label}
+                    </div>
+                  )}
                 />
+
               </Form.Group>
               <Button
                 appearance="primary"
@@ -478,19 +493,19 @@ export default function ChatApp() {
               width={160}
             />
           </div>
-          <div style={{ display: "flex", justifyContent: "center", marginLeft:'10%', marginTop: "10px" }}>
-            <input type="file" onChange={(e)=>{
-              if(e.target.files[0]?.type?.includes('image')){
+          <div style={{ display: "flex", justifyContent: "center", marginLeft: '10%', marginTop: "10px" }}>
+            <input type="file" onChange={(e) => {
+              if (e.target.files[0]?.type?.includes('image')) {
                 setImgFile(e.target.files[0])
                 setImage((URL.createObjectURL(e.target.files[0])))
-              }else{
+              } else {
                 setImgErr(`Select an image file!`)
                 setImageErr(true);
               }
-            }}/>
+            }} />
           </div>
-            {imageErr&&<p style={{ color:'red', display: "block", margin: " auto" }}>{imgErr}</p>}
-          <Button onClick={()=>updateProfile()} style={{ display: "block", margin: "10px auto" }}>Update</Button>
+          {imageErr && <p style={{ color: 'red', display: "block", margin: " auto" }}>{imgErr}</p>}
+          <Button onClick={() => updateProfile()} style={{ display: "block", margin: "10px auto" }}>Update</Button>
         </Modal.Body>
       </Modal>
     </section>
