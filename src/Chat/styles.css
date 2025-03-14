@@ -543,6 +543,7 @@ body {
     border-radius: 6px;
     line-height: 1.5;
     margin-left: 32px;
+    
 }
 
 .conversation-item.me .conversation-item-text {
@@ -960,4 +961,41 @@ body {
 
 .message-user-name{
     font-size: x-small;
+}
+
+.audio-message-player{
+    display: flex;
+}
+
+.audio-play-button{
+    background: unset;
+    color: #111;
+    padding-right: 1rem;
+}
+
+.audio-player {
+    width: 70%; 
+    max-width: 100%; 
+}
+
+.audio-container{
+    display: flex;
+}
+
+.audio-duration{
+    padding-inline: 5px;
+}
+
+.recording-button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.record-btn:hover{
+    cursor: pointer;
+}
+
+.record-loader{
+    padding-top: 1rem;
 }

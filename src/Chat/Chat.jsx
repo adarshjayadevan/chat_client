@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import { IoChatbubbleEllipsesOutline, IoMicOutline } from "react-icons/io5";
 import { IoIosLogOut, IoIosSearch } from "react-icons/io";
 import { HiUserAdd } from "react-icons/hi";
 import { MdGroupAdd } from "react-icons/md";
 import { CiUser } from "react-icons/ci";
-import { Modal, List, HStack, Text, Avatar, Form, Button, CheckPicker, Stack, Input, Image } from 'rsuite';
+import { Modal, List, HStack, Text, Avatar, Form, Button, CheckPicker, Stack, Input, Image, Loader } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
 import "./styles.css";
 import "./color-palette.css";
@@ -17,7 +17,8 @@ import moment from "moment";
 
 
 export default function ChatApp() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [loader, setLoader] = useState(false);
   const [isProfileActive, setIsProfileActive] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeConversation, setActiveConversation] = useState("default");
@@ -131,15 +132,18 @@ export default function ChatApp() {
   async function getMessages(conversationId) {
     const token = localStorage.getItem('token');
     const userId = jwtDecode(token).id
+    setLoader(true);
     axios.post(`${import.meta.env.VITE_API_URL}/messages`, { userId, chatId: conversationId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       if (res?.data?.data[0]) {
-        debugger
+        // debugger
         setUserMessages(res?.data?.data[0].messages);
         setReceiverImage(res?.data?.data[0].receiverImage)
+        setLoader(false);
       }
     }).catch(err => {
       console.log(err);
+      setLoader(false);
       if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
         localStorage.removeItem('token');
         navigate('/')
@@ -154,15 +158,18 @@ export default function ChatApp() {
 
   async function getGroupMessages(conversationId) {
     const token = localStorage.getItem('token');
+    setLoader(true);
     axios.post(`${import.meta.env.VITE_API_URL}/groupmessages`, { groupId: conversationId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       if (res?.data?.data[0]) {
-        debugger
+        // debugger
         setGroupImage(res?.data?.data[0].group?.groupImage)
         setGroupMessagesData(res?.data?.data[0]);
+        setLoader(false);
       }
     }).catch(err => {
       console.log(err);
+      setLoader(false);
       if (err.status == 401 && err.response?.data?.message == "Unauthorized") {
         localStorage.removeItem('token');
         navigate('/')
@@ -180,7 +187,7 @@ export default function ChatApp() {
     const userId = jwtDecode(token).id
     axios.post(`${import.meta.env.VITE_API_URL}/contacts`, { userId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
-      debugger
+      // debugger
       if (res?.data?.data) {
         setUsers(res?.data?.data)
       }
@@ -224,12 +231,12 @@ export default function ChatApp() {
     const token = localStorage.getItem('token');
     const userId = jwtDecode(token).id
     axios.post(`${import.meta.env.VITE_API_URL}/group`, { name: newGroupName }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
-      debugger
+      // debugger
       setNewGroupId(res?.data?.groupId)
       setNewGroupAdded(true);
       axios.post(`${import.meta.env.VITE_API_URL}/contacts`, { userId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
         console.log(res);
-        debugger
+        // debugger
         if (res?.data?.data) {
           setUsers(res?.data?.data)
         }
@@ -321,6 +328,20 @@ export default function ChatApp() {
     navigate('/login')
   }
 
+  function printLastMessage(item){
+    if(item){
+      if(item["type"]=='text'){
+        return item["text"];
+      }else if(item["type"]=='audio'){
+        return <IoMicOutline/>
+      }else {
+        return ''
+      }
+    }else{
+        return ''
+    }
+  }
+
   return (
     <section className="chat-section">
       <div className="chat-container">
@@ -365,7 +386,7 @@ export default function ChatApp() {
                       <img className="content-message-image" src={elem.receiverImage || elem.groupImage || AvatarImg} alt="" />
                       <span className="content-message-info">
                         <span className="content-message-name">{elem.receiver || elem.name}</span>
-                        <span className="content-message-text">{elem.messages?.text || ''}</span>
+                        <span className="content-message-text">{printLastMessage(elem.messages)}</span>
                       </span>
                       <span className="content-message-more">
                         <span className="content-message-time">{elem.messages?.timestamp ? moment(elem.messages?.timestamp).format('LT') : ''}</span>
@@ -393,6 +414,7 @@ export default function ChatApp() {
             setGroupMessagesData={setGroupMessagesData}
             receiverImage={receiverImage}
             groupImage={groupImage}
+            loader={loader}
           />
         </div>
       </div>
