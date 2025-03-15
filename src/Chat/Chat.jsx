@@ -3,6 +3,7 @@ import { IoChatbubbleEllipsesOutline, IoMicOutline } from "react-icons/io5";
 import { IoIosLogOut, IoIosSearch } from "react-icons/io";
 import { HiUserAdd } from "react-icons/hi";
 import { MdGroupAdd } from "react-icons/md";
+import { FaFileImage } from "react-icons/fa6";
 import { CiUser } from "react-icons/ci";
 import { Modal, List, HStack, Text, Avatar, Form, Button, CheckPicker, Stack, Input, Image, Loader } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
@@ -47,6 +48,7 @@ export default function ChatApp() {
   const [image, setImage] = useState(localStorage.getItem('profileImage'));
   const [imgErr, setImgErr] = useState('');
   const [imageErr, setImageErr] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
 
   const [search, setSearch] = useState('')
 
@@ -132,11 +134,20 @@ export default function ChatApp() {
   async function getMessages(conversationId) {
     const token = localStorage.getItem('token');
     const userId = jwtDecode(token).id
+    setGalleryImages([])
     setLoader(true);
     axios.post(`${import.meta.env.VITE_API_URL}/messages`, { userId, chatId: conversationId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       if (res?.data?.data[0]) {
         // debugger
+        for(let elem of res?.data?.data[0]?.messages){
+          if(elem.type=='image'){
+            setGalleryImages(prev=>[...prev,{
+              src:elem.image,
+              id:elem._id
+            }])
+          }
+        }
         setUserMessages(res?.data?.data[0].messages);
         setReceiverImage(res?.data?.data[0].receiverImage)
         setLoader(false);
@@ -158,11 +169,20 @@ export default function ChatApp() {
 
   async function getGroupMessages(conversationId) {
     const token = localStorage.getItem('token');
+    setGalleryImages([])
     setLoader(true);
     axios.post(`${import.meta.env.VITE_API_URL}/groupmessages`, { groupId: conversationId }, { headers: { Authorization: `Bearer ${token}` } }).then(res => {
       console.log(res);
       if (res?.data?.data[0]) {
         // debugger
+        for(let elem of res?.data?.data[0]?.messages){
+          if(elem.type=='image'){
+            setGalleryImages(prev=>[...prev,{
+              src:elem.image,
+              id:elem._id
+            }])
+          }
+        }
         setGroupImage(res?.data?.data[0].group?.groupImage)
         setGroupMessagesData(res?.data?.data[0]);
         setLoader(false);
@@ -334,6 +354,8 @@ export default function ChatApp() {
         return item["text"];
       }else if(item["type"]=='audio'){
         return <IoMicOutline/>
+      }else if(item["type"]=='image'){
+        return <FaFileImage style={{color:'#8934eb'}}/>
       }else {
         return ''
       }
@@ -415,6 +437,8 @@ export default function ChatApp() {
             receiverImage={receiverImage}
             groupImage={groupImage}
             loader={loader}
+            galleryImages={galleryImages}
+            setGalleryImages={setGalleryImages}
           />
         </div>
       </div>

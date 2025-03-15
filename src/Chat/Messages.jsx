@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IoChatbubbleEllipsesOutline, IoVideocamOutline, IoMicOutline } from "react-icons/io5";
-import { FaPlay, FaPause, FaStop } from "react-icons/fa";
+import { FaPlay, FaPause, FaStop, FaImage, FaTimes, FaAngleLeft, FaAngleRight, FaDownload  } from "react-icons/fa";
 import { IoIosCall, IoMdMore, IoIosArrowBack, IoIosMore } from "react-icons/io";
 import WavesurferPlayer from '@wavesurfer/react'
-import { GrEmoji } from "react-icons/gr";
+import { GrEmoji, GrAttachment } from "react-icons/gr";
 import { PiTelegramLogo } from "react-icons/pi";
 import { Dropdown, Modal, Button, Loader } from 'rsuite';
 import EmojiPicker from 'emoji-picker-react';
@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import GroupIcon from '../assets/groupIcon.jpg';
 import UserIcon from '../assets/user-avatar.jpg';
 import { ScaleLoader } from "react-spinners";
+import Lightbox from 'react-spring-lightbox';
 
 
 export default function Messages({
@@ -28,7 +29,9 @@ export default function Messages({
   setGroupMessagesData,
   receiverImage,
   groupImage,
-  loader
+  loader,
+  galleryImages,
+  setGalleryImages
 }) {
   const endRef = useRef(null);
   const navigate = useNavigate()
@@ -47,7 +50,11 @@ export default function Messages({
   const [durations, setDurations] = useState({});
   const [currentTimes, setCurrentTimes] = useState({});
 
-  const [groupRecordModal, setGroupRecordModal] = useState(false);
+  const [attachmentModal, setAttachmentModal] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageSelected, setImageSelected] = useState(false);
+  const [imageBase64, setImageBase64] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!token) {
@@ -73,10 +80,13 @@ export default function Messages({
       console.log(lastJsonMessage)
       if (isGroup) {
         if (!receivedMessage.messages) {
-          // setGroupMessagesData((prevData) => ({
-          //   ...prevData,
-          //   messages: [...prevData.messages, receivedMessage.message],
-          // }));
+          if (receivedMessage.message?.type == 'image') {
+            setGalleryImages(prev => [...prev || [], {
+              ...receivedMessage.message,
+              src: receivedMessage.message.image,
+              id: receivedMessage.message._id
+            }])
+          }
           setGroupMessagesData((prevData) => ({
             ...prevData,
             messages: [...(prevData?.messages || []), receivedMessage.message],
@@ -84,6 +94,13 @@ export default function Messages({
         }
       } else {
         if (!receivedMessage.messages) {
+          if (receivedMessage.message?.type == 'image') {
+            setGalleryImages(prev => [...prev, {
+              ...receivedMessage.message,
+              src: receivedMessage.message.image,
+              id: receivedMessage.message._id
+            }])
+          }
           setMessages((prevMessages) => [...prevMessages, receivedMessage.message]);
         }
       }
@@ -91,7 +108,25 @@ export default function Messages({
   })
 
   const handleSendMessage = () => {
-    if (!audioURL) {
+    if (imageFile) {
+
+      const messageData = {
+        image: imageBase64,
+      };
+
+      sendJsonMessage(messageData);
+      setImageBase64(null);
+      setImageFile(null);
+      setImageSelected(false);
+    } else if (audioURL) {
+      const messageData = {
+        audio: audioBase64,
+      };
+      setAudioURL(null);
+      sendJsonMessage(messageData);
+      setRecordModal(false)
+      setAudioBase64(null)
+    } else {
       if (newMessage.trim() === "") return;
 
       const messageData = {
@@ -100,14 +135,6 @@ export default function Messages({
 
       sendJsonMessage(messageData);
       setNewMessage("");
-    } else {
-      const messageData = {
-        audio: audioBase64,
-      };
-      setAudioURL(null);
-      sendJsonMessage(messageData);
-      setRecordModal(false)
-      setAudioBase64(null)
     }
   };
 
@@ -177,11 +204,32 @@ export default function Messages({
   };
 
   const onPlayPause = (id) => {
-    debugger
     if (players.current[id]) {
       players.current[id].playPause();
       setPlayerStates((prev) => ({ ...prev, [id]: !prev[id] })); // Update UI state
     }
+  };
+
+  const [currentImageIndex, setCurrentIndex] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const openLightbox = (id) => {
+    debugger
+    const index = galleryImages.findIndex((img) => img.id === id);
+    if (index !== -1) {
+      setCurrentIndex(index);
+      setIsOpen(true);
+    }
+  };
+
+  const closeLightbox = () => setIsOpen(false);
+
+  const gotoPrevious = () => {
+    setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : galleryImages.length - 1));
+  };
+
+  const gotoNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex < galleryImages.length - 1 ? prevIndex + 1 : 0));
   };
 
   if (activeConversation === "default") return null;
@@ -228,6 +276,20 @@ export default function Messages({
           </div>
         </div>
       </div>
+    } else if (elem.type == 'image') {
+      const id = elem._id;
+      return <div key={id} className="conversation-item-content">
+        <div className="conversation-item-wrapper">
+          <div className="conversation-item-box">
+            <div className="conversation-item-text" onClick={() => openLightbox(id)}>
+              <div className="image-container">
+                <img src={elem.image} />
+              </div>
+              <div className="conversation-item-time">{moment(elem.timestamp).format('LT')}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     }
   }
 
@@ -238,6 +300,30 @@ export default function Messages({
       return <FaStop className="record-btn" onClick={stopRecording} />
     }
   }
+
+
+
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+
+  const handleClose = () => {
+    setImageSelected(false);
+    setImageFile(null);
+  };
+
+  const downloadBase64Image = (idx) => {
+    const base64Data = galleryImages[idx]["src"];
+    const link = document.createElement("a");
+    link.href = base64Data;
+    link.download = `Messenger-${moment().format()}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   return (
     loader ? <>
@@ -295,6 +381,12 @@ export default function Messages({
                 <textarea className="conversation-form-input" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} rows="1" placeholder="Type here..."></textarea>
                 <button type="button" className="conversation-form-record" onClick={() => setRecordModal(true)}><IoMicOutline /></button>
               </div>
+              <Dropdown className="conversation-form-attachment" noCaret title={<GrAttachment />} placement="topEnd">
+                {[
+                  <Dropdown.Item className="attachment-dropdown-item" key={1}><span onClick={() => handleFileUpload()} className="attachment-icon-text">
+                    <FaImage className="attachment-dropdown-icon" />Image</span></Dropdown.Item>,
+                ]}
+              </Dropdown>
               <button onClick={() => { handleSendMessage() }} type="button" disabled={newMessage.length == 0} className="conversation-form-button conversation-form-submit"><PiTelegramLogo /></button>
             </div>
           </>
@@ -339,10 +431,130 @@ export default function Messages({
                 <textarea className="conversation-form-input" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} rows="1" placeholder="Type here..."></textarea>
                 <button type="button" className="conversation-form-record" onClick={() => setRecordModal(true)}><IoMicOutline /></button>
               </div>
+              {/* <button type="button" className="conversation-form-attachment" onClick={() => setAttachmentModal(true)}><GrAttachment /></button> */}
+              <Dropdown className="conversation-form-attachment" noCaret title={<GrAttachment />} placement="topEnd">
+                {[
+                  <Dropdown.Item className="attachment-dropdown-item" key={1}><span onClick={() => handleFileUpload()} className="attachment-icon-text">
+                    <FaImage className="attachment-dropdown-icon" />Image</span></Dropdown.Item>,
+                ]}
+              </Dropdown>
               <button onClick={() => { debugger; handleSendMessage() }} type="button" disabled={newMessage.length == 0} className="conversation-form-button conversation-form-submit"><PiTelegramLogo /></button>
             </div>
           </>
         }
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            console.log("File selected:", e.target.files[0]);
+            setImageFile(e.target.files[0]);
+            setImageSelected(true);
+            const reader = new FileReader();
+            reader.readAsDataURL(e.target.files[0]);
+            reader.onloadend = () => {
+              setImageBase64(reader.result);
+            };
+          }}
+        />
+        {imageSelected &&
+          <Lightbox
+            isOpen={imageSelected}
+            images={[{
+              src: URL.createObjectURL(imageFile),
+              alt: imageFile.name
+            }]}
+            onClose={() => handleClose()}
+            singleClickToZoom
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.9)" }}
+            renderHeader={() => (
+              <div
+                style={{
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  background: "rgba(0, 0, 0, 0.8)",
+                  padding: "10px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  color: "#fff",
+                }}
+              >
+                <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+                  {imageFile.name}
+                </span>
+                <div className="lightbox-btn">
+                  <button
+                    className="lightbox-send-btn"
+                    onClick={() => handleSendMessage()}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#fff",
+                      fontSize: "18px",
+                      cursor: "pointer",
+                    }}>
+                    <span>
+                      <PiTelegramLogo />
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleClose()
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#fff",
+                      fontSize: "18px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              </div>
+            )}
+          />}
+        {isOpen && (
+          <Lightbox
+            isOpen={isOpen}
+            images={galleryImages}
+            currentIndex={currentImageIndex}
+            onClose={closeLightbox}
+            onPrev={gotoPrevious}
+            onNext={gotoNext}
+            style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+
+            // Header (Close Button)
+            renderHeader={() => (
+              <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}>
+                <button onClick={()=>downloadBase64Image(currentImageIndex)} style={{ background: 'none',marginInline:'1rem', border: 'none', cursor: 'pointer' }}>
+                  <FaDownload  size={30} color="white" />
+                </button>
+                <button onClick={closeLightbox} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <FaTimes size={30} color="white" />
+                </button>
+              </div>
+            )}
+
+            // Previous Button
+            renderPrevButton={() => (
+              <button onClick={gotoPrevious} style={{ position: 'absolute', left: 20, top: '50%', background: 'none', border: 'none', cursor: 'pointer', zIndex: 1000 }}>
+                <FaAngleLeft size={40} color="white" />
+              </button>
+            )}
+
+            // Next Button
+            renderNextButton={() => (
+              <button onClick={gotoNext} style={{ position: 'absolute', right: 20, top: '50%', background: 'none', border: 'none', cursor: 'pointer', zIndex: 1000 }}>
+                <FaAngleRight size={40} color="white" />
+              </button>
+            )}
+          />
+        )}
         <Modal size={'xs'} open={recordModal} onClose={() => setRecordModal(false)}>
           <Modal.Header>
             <Modal.Title>{'Record'}</Modal.Title>

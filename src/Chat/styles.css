@@ -543,7 +543,7 @@ body {
     border-radius: 6px;
     line-height: 1.5;
     margin-left: 32px;
-    
+
 }
 
 .conversation-item.me .conversation-item-text {
@@ -758,6 +758,28 @@ body {
     flex-shrink: 0;
 }
 
+.conversation-form-attachment {
+    padding-right: 0.5rem;
+}
+
+.attachment-dropdown-item {
+    display: flex;
+    align-items: center;
+}
+
+.attachment-icon-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Adjust spacing between icon and text */
+}
+
+.attachment-dropdown-icon {
+    color: #7732a8;
+    font-size: 1.2em;
+    /* Adjust icon size if needed */
+}
+
 .conversation-form-button:hover {
     background-color: var(--slate-100);
     color: var(--slate-600);
@@ -945,57 +967,70 @@ body {
     background-size: contain;
 }
 
-.list-contacts{
+.list-contacts {
     max-height: 150px;
     overflow-y: auto;
 }
 
-.user-contact{
+.user-contact {
     cursor: pointer;
     transition: background-color 0.3s ease-in-out;
 }
 
-.user-contact :hover{
+.user-contact :hover {
     background-color: #f0f0f0;
 }
 
-.message-user-name{
+.message-user-name {
     font-size: x-small;
 }
 
-.audio-message-player{
+.audio-message-player {
     display: flex;
 }
 
-.audio-play-button{
+.audio-play-button {
     background: unset;
     color: #111;
     padding-right: 1rem;
 }
 
 .audio-player {
-    width: 70%; 
-    max-width: 100%; 
+    width: 70%;
+    max-width: 100%;
 }
 
-.audio-container{
+.audio-container {
     display: flex;
 }
 
-.audio-duration{
+.audio-duration {
     padding-inline: 5px;
 }
 
-.recording-button{
+.recording-button {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.record-btn:hover{
+.record-btn:hover {
     cursor: pointer;
 }
 
-.record-loader{
+.record-loader {
     padding-top: 1rem;
+}
+
+.lightbox-send-btn {
+    margin-inline: 10px;
+}
+
+.image-container{
+    cursor: pointer;
+}
+
+.image-container img{
+    height: 200px;
+    width: 250px;
 }

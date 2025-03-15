@@ -24,6 +24,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.5",
     "react-spinners": "^0.15.0",
+    "react-spring-lightbox": "^1.8.0",
     "react-use-websocket": "^4.13.0",
     "rsuite": "^5.77.1"
   },
