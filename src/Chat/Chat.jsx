@@ -388,7 +388,7 @@ export default function ChatApp() {
         </aside>
         <div className="chat-content">
           <div className="content-sidebar">
-            <div className="content-sidebar-title">Messenger</div>
+            <div className="content-sidebar-title">Zync Space</div>
             <div className="content-sidebar-form">
               <input type="search" onChange={(e) => setSearch(e.target.value)} className="content-sidebar-input" placeholder="Search..." />
               <button onClick={() => getContacts()} className="content-sidebar-submit"><IoIosSearch /></button>
